@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rrd.dao.CustomDao">
+
+    <select id="getRuleTask" resultType="java.util.Map">
+        select m_task_id from m_roletask_rel where m_role_id in
+        <foreach collection="roleArr" item="role" open="(" close=")" separator=",">#{role}</foreach>
+    </select>
+
+    <select id="getTaskWithIds" resultType="java.util.Map">
+        select o.task_name,o.m_task_id,o.parent_id ,parentname as parent_nm,parenturl, location,icon_type
+        from m_task o where o. m_task_id in
+        <foreach collection="taskIds" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </select>
+
+    <select id="queryParentTask" resultType="java.util.Map">
+        select o.task_name,o.m_task_id,o.parent_id ,parentname as parent_nm,parenturl, location,icon_type
+        from m_task o where o. m_task_id in
+        <foreach collection="Ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </select>
+
+    <select id="getCustomList" resultType="com.rrd.model.Custom">
+        SELECT custom_id, phone, name, age, sex,identity, idenaddress, birthday, placeaddress,
+        qq, email, wechat, alipay, haswork,
+        crtdate, isrealauth, isphoneauth, iseducauth, purpose from custom
+        <where>
+            <if test="param.phone != null and param.phone != ''">
+                and phone = like CONCAT('%', #{param.phone}, '%')
+            </if>
+            <if test="param.name != null and param.name != ''">
+                and name like CONCAT('%', #{param.name}, '%')
+            </if>
+            <if test="param.isrealauth != null and param.isrealauth != ''">
+                and isrealauth = #{param.isrealauth}
+            </if>
+            <if test="param.source != null and param.source != ''">
+                and source = #{param.source}
+            </if>
+            <if test="param.startdate != null and param.startdate != ''">
+                and crtdate > #{param.startdate}
+            </if>
+            <if test="param.enddate != null and param.enddate != ''">
+                and DATE_FORMAT(crtdate, '%Y-%m-%d') &lt;= #{param.enddate}
+            </if>
+        </where>
+    </select>
+
+    <select id="getCustomById" resultType="com.rrd.model.Custom">
+        SELECT c.custom_id, c.phone, c.name, c.age, c.sex,c.identity, c.idenaddress, c.birthday, c.placeaddress,
+        c.qq, c.email, c.wechat, c.alipay,  c.haswork,
+        c.isrealauth, c.isphoneauth, c.iseducauth, c.purpose, c.onelinkman, c.onelinkcell,
+        c.onelinkrealation, (select data_name from bs_basedict where dict_code = 'LX001' and data_code = c.onelinkrealation) onelinkrealationnm,
+        c.twolinkman, c.twolinkrealation, (select data_name from bs_basedict where dict_code = 'LX001' and data_code = c.twolinkrealation) twolinkrealationnm,
+        c.twolinkcell, c.source, c.inviter, c.educ_id, c.work_id, c.homecell,
+        ce.schoolname, ce.educationtype, ce.arrangement, ce.timeenrollment,ce.dategraduation,
+        ce.specialitiename,ce.graduationstatus, cw.work_year,
+        (select data_name from bs_basedict where dict_code = 'WK001' and data_code = cw.work_year) work_yearnm,
+        cw.work_state, (select data_name from bs_basedict where dict_code = 'WK002' and data_code = cw.work_state) work_statenm,
+        cw.currcompany, cw.currwork_year, (select data_name from bs_basedict where dict_code = 'WK001' and data_code = cw.currwork_year) currwork_yearnm,
+        cw.currwork_address, cw.currwork_cell, cw.company_sort, (select data_name from bs_basedict where dict_code = 'WK003' and data_code = cw.company_sort) company_sortnm,
+        cw.job, (select data_name from bs_basedict where dict_code = 'WK004' and data_code = cw.job) jobnm,
+        cw.income, (select data_name from bs_basedict where dict_code = 'WK005' and data_code = cw.income) incomenm
+        from custom c left join cus_educ ce on c.educ_id = ce.id left join cus_work cw on c.work_id = cw.id
+        where c.custom_id = #{id}
+    </select>
+
+    <select id="getCustomWithPhone" resultType="java.lang.Integer">
+        select count(*) from custom where phone = #{phone}
+        <if test="id != null and id != ''">
+            and custom_id != #{id}
+        </if>
+    </select>
+
+    <select id="getAuthList" resultType="java.util.Map">
+        select ca.id, ca.state, DATE_FORMAT(ca.start_date, '%Y-%m-%d') start_date, ca.purpost, ca.college,
+        ca.specialty, ca.dorm, ca.picture1, ca.picture2 from cus_auth ca left join custom c on ca.custom_id =
+        c.custom_id
+        <where>
+            <if test="param.phone != null and param.phone != ''">
+                and c.custom_id = #{phone}
+            </if>
+            <if test="param.name != null and param.name != ''">
+                and c.name = #{name}
+            </if>
+            <if test="param.authsuccess == 'true'">
+                and ca.state = '1'
+            </if>
+            <if test="param.autherror == 'true'">
+                and ca.state = '2'
+            </if>
+        </where>
+    </select>
+
+    <!--
+    homecell, work_state, (select data_name from bs_basedict where dict_code = 'WK002' and data_code = work_state) work_statenm,
+       currwork_address, currwork_cell, job, (select data_name from bs_basedict where dict_code = 'WK004' and data_code = job) jobnm,
+    -->
+
+    <insert id="addCustom">
+        insert INTO custom(phone, password, name, "identity", age, sex, qq,
+         email, wechat, alipay, homecell, isrealauth, isphoneauth, iseducauth, purpose, educ_id, work_id, onelinkman, onelinkrealation,
+           onelinkcell, twolinkman, twolinkrealation, twolinkcell, idenaddress, placeaddress, crtuser, crtdate
+           , upddate, upduser, recsts)
+        VALUE (#{phone}, #{password}, #{name}, #{identity}, #{age}, #{sex}, #{qq},
+        #{email}, #{wechat}, #{alipay}, #{homecell}, #{isrealauth}, #{isphoneauth}, #{iseducauth},
+        #{purpose}, #{educ_id}, #{work_id},  #{onelinkman}, #{onelinkrealation},
+        #{onelinkcell}, #{twolinkman}, #{twolinkrealation}, #{twolinkcell}, #{idenaddress}, #{placeaddress},
+        #{crtuser}, now(), now(),  #{upduser}, '1')
+    </insert>
+
+
+    <update id="updateCustom">
+        update custom set phone = #{phone}, password = #{password}, name = #{name}, identity = #{identity}, idenaddress = #{idenaddress},
+        age = #{age}, sex = #{sex}, qq = #{qq}, email = #{email}, wechat = #{wechat},
+        alipay = #{alipay}, homecell = #{homecell}, isrealauth = #{isrealauth}, isphoneauth = #{isphoneauth},
+        iseducauth = #{iseducauth}, purpose = #{purpose}, work_id = #{work_id}, educ_id = #{educ_id},
+        onelinkman = #{onelinkman}, onelinkrealation = #{onelinkrealation}, onelinkcell = #{onelinkcell},
+        twolinkman = #{twolinkman}, twolinkrealation = #{twolinkrealation}, twolinkcell = #{twolinkcell},
+        idenaddress = #{idenaddress}, placeaddress = #{placeaddress}, upddate = now(), upduser = #{upduser} where custom_id = #{custom_id}
+    </update>
+
+
+    <!--添加学历信息-->
+    <insert id="addEduc" useGeneratedKeys="true" keyProperty="educ_id" keyColumn="id">
+        INSERT INTO cus_educ (educationtype, schoolname, purpose, timeenrollment, dategraduation,
+         specialitiename, graduationstatus, crtdate)
+         VALUE (#{educationtype}, #{schoolname}, #{purpose}, #{timeenrollment}, #{dategraduation},
+         #{specialitiename}, #{graduationstatus}, now())
+    </insert>
+
+    <update id="updateEduc">
+        update cus_educ set educationtype = #{educationtype}, schoolname = #{schoolname}, purpose = #{purpose},
+          timeenrollment = #{timeenrollment}, dategraduation = #{dategraduation},
+          specialitiename = #{specialitiename}, graduationstatus = #{graduationstatus} where id = #{educ_id}
+    </update>
+
+    <insert id="addWork" useGeneratedKeys="true" keyProperty="work_id" keyColumn="id">
+        INSERT INTO cus_work(work_year, work_state, currcompany, currwork_year, currwork_address,
+        currwork_cell, company_sort, job, income, upddate, upduser)
+         VALUE (#{work_year}, #{work_state}, #{currcompany}, #{currwork_year}, #{currwork_address},
+         #{currwork_cell}, #{company_sort}, #{job}, #{income}, now(), #{crtuser})
+    </insert>
+
+    <update id="updateWork">
+        update cus_work set work_year = #{work_year}, work_state = #{work_state}, currcompany = #{currcompany},
+        currwork_year = #{currwork_year}, currwork_address = #{currwork_address}, currwork_cell = #{currwork_cell},
+        company_sort = #{company_sort}, job = #{job}, income = #{income}, upddate = now(), upduser = #{upduser}  where id = #{work_id}
+    </update>
+
+    <delete id="delCustom">
+        DELETE FROM custom where custom_id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </delete>
+</mapper>

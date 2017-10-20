@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.rrd.dao.UserDao">
+
+    <select id="getUserWithNameAndPsd" resultType="com.rrd.model.User">
+        SELECT id, userno, loginname, username, cell, phone, email, qq, crtuser,
+        DATE_FORMAT(crtdate, '%Y-%m-%d') crtdate, upduser, DATE_FORMAT(upddate, '%Y-%m-%d') upddate,
+        part, (select data_name from bs_basedict where dict_code = 'YG001' and data_code = part) partname,
+        part_job, m_role_id, adminflg FROM user where binary loginname = #{loginname}
+        and password = #{password} and recsts = 1
+    </select>
+
+    <select id="getinternal" resultType="com.rrd.model.User">
+        SELECT id, userno, loginname, username, cell, phone, email, qq, crtuser,
+        DATE_FORMAT(crtdate, '%Y-%m-%d') crtdate, upduser, DATE_FORMAT(upddate, '%Y-%m-%d') upddate,
+        part, (select data_name from bs_basedict where dict_code = 'YG001' and data_code = part) partname,
+        part_job, m_role_id, adminflg, (select role_name from m_role m where m.m_role_id = u.m_role_id) role_name
+        FROM user u
+        <where>
+            <if test="userno != null and userno != ''">
+                and userno like CONCAT('%', #{userno}, '%')
+            </if>
+            <if test="username != null and username != ''">
+                and username like CONCAT('%', #{username}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="getInternalById" resultType="com.rrd.model.User">
+        select id, userno, loginname, username, cell, phone, email, qq, crtuser,
+        DATE_FORMAT(crtdate, '%Y-%m-%d') crtdate, upduser, DATE_FORMAT(upddate, '%Y-%m-%d') upddate,
+        part, (select data_name from bs_basedict where dict_code = 'YG001' and data_code = part) partname,
+        part_job, m_role_id, adminflg from user where id = #{id}
+    </select>
+
+    <select id="getUserByLoginNmOrNo" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM user where userno = #{userno} or loginname = #{loginname}
+    </select>
+
+    <delete id="delUser">
+        DELETE FROM user where id in <foreach collection="ids" item="id" open="(" close=")" separator=",">#{id}</foreach>
+    </delete>
+
+    <insert id="addUser">
+        INSERT INTO user(userno, loginname, password, username, cell, phone, email, qq,
+         crtuser, crtdate, upduser, upddate, part, part_job)
+         VALUE (#{userno}, #{loginname}, #{password}, #{username}, #{cell}, #{phone}, #{email}, #{qq},
+         #{crtuser}, now(), #{crtuser}, now(), #{part}, #{part_job})
+    </insert>
+
+    <update id="updateUser">
+        update user set userno = #{userno}, loginname = #{loginname}, username = #{username},
+         cell = #{cell}, phone = #{phone}, email = #{email}, qq = #{qq}, upduser = #{upduser}, upddate = now(),
+          part = #{part}, part_job = #{part_job} where id = #{id}
+    </update>
+</mapper>

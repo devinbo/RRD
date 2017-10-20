@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+	<!-- 全局setting配置 -->
+	<settings>
+		<!-- 使用jdbc自增主键 -->
+		<setting name="useGeneratedKeys" value="true"/>
+		<!-- 使用列别名 替换列名  默认是开启的，可不配置 -->
+		<setting name="useColumnLabel" value="true"/>
+		<!-- 开启懒加载 -->
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<!--开启二级缓存-->
+		<setting name="cacheEnabled" value="true"></setting>
+		<!-- 懒加载的属性按需加载，即使用到该属性才去加载 -->
+		<setting name="aggressiveLazyLoading" value="false"/>
+		<!-- 开启驼峰命名 -->
+		<!-- 
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+		 -->
+		<!--没有映射结果集时， 打印warning日志-->
+		<!--<setting name="autoMappingUnknownColumnBehavior" value="WARNING"></setting>-->
+		<!-- 配置自动映射结果集等级  FULL 全部查询。  PARTIAL 只查询没有嵌套的结果集-->
+		<setting name="autoMappingBehavior" value="PARTIAL"/> 
+		<!-- 使用log4j配置加载mybatis日志信息 -->
+		<setting name="logImpl" value="LOG4J"/>
+	</settings>
+
+	<!-- 配置别名 -->
+	<typeAliases>
+		<package name="com.rrd.model"/>
+	</typeAliases>
+
+	<!--自定义map结果集处理器-->
+	<objectWrapperFactory type="com.rrd.plugin.MapWrapperFactory"></objectWrapperFactory>
+
+	<plugins>
+		<plugin interceptor="com.github.pagehelper.PageHelper">
+			<property name="dialect" value="mysql"/>
+			<property name="reasonable" value="true"/> <!--分页参数合理化， pageNum<1,默认查询第一页， pageNum>totalPage默认查询最后一页-->
+		</plugin>
+	</plugins>
+</configuration>
+
+

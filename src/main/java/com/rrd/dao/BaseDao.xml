@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rrd.dao.BaseDao">
+    <insert id="addRoleRel"  keyColumn="id">
+        insert INTO m_roletask_rel (m_task_id, m_role_id) values (#{param.taskids},#{param.m_role_id} )
+    </insert>
+    <insert id="addRole" keyColumn="m_role_id" keyProperty="param.m_role_id">
+        insert INTO m_role (role_name,crtdate,crtuser)values(#{param.rolenm},#{param.time},#{param.login_nm})
+    </insert>
+
+    <update id="delRoles">
+        update  m_role set recsts = "D" where role_name = #{rolenm}
+    </update>
+    <update id="updRole">
+        update m_role set role_name = #{param.rolenm},uptdate = #{param.time},uptuser = #{param.login_nm}
+        where m_role_id = #{param.roleid}
+    </update>
+
+    <update id="updRoleRel">
+        update m_roletask_rel set m_task_id = #{param.taskids} where m_role_id = #{param.roleid}
+    </update>
+    <update id="distributeRole">
+        update user set m_role_id = #{roleids} where loginname = #{userno} and recsts = '1'
+    </update>
+
+    <select id="getDict" resultType="java.util.Map">
+        select dict_name, data_code, data_name  FROM bs_basedict  where dict_code = #{dict_code}
+    </select>
+    <select id="getRoles" resultType="java.util.Map">
+        SELECT role_name as rolenm ,m_role_id as id from m_role where recsts = '1'
+        <if test="role_id!=null and role_id!=''">
+            and m_role_id = #{role_id}
+        </if>
+    </select>
+    <select id="getSelfRoleId" resultType="java.util.Map">
+        SELECT m_role_id  from user where loginname = #{login_nm} and recsts = '1'
+    </select>
+
+    <select id="getMenues" resultType="java.lang.String">
+        select rt.m_task_id from m_roletask_rel rt left join m_role r on rt.m_role_id = r.m_role_id
+        <where>
+            r.recsts = '1'
+            <if test="rolenm!=null and rolenm != ''">
+                and r.role_name = #{rolenm}
+            </if>
+            <if test="roleid!=null and roleid!=''">
+                and r.m_role_id = #{roleid}
+            </if>
+        </where>
+    </select>
+    <select id="getTasks" resultType="java.util.Map">
+        select  o.task_name,o.m_task_id,o.parent_id ,parentname as parent_nm,parenturl, location,icon_type
+        from m_task o where o. m_task_id = #{taskid}
+    </select>
+    <select id="getAllTask" resultType="java.util.Map">
+         select  o.task_name,o.m_task_id,o.parent_id ,
+        (SELECT i.task_name from m_task i where  i.M_TASK_ID = o.PARENT_ID )parent_nm
+        from m_task o
+    </select>
+    <select id="getRole" resultType="java.lang.Integer">
+        select count(*) from m_role where recsts = '1' and role_name=#{param.rolenm}
+        <if test="param.roleid!=null and param.roleid!=''">
+            and m_role_id != #{param.roleid}
+        </if>
+    </select>
+    <select id="getRoleId" resultType="java.lang.String">
+        select m_role_id from m_role where role_name = #{rolenm} and recsts = '1'
+    </select>
+
+    <select id="getproductList" resultType="com.rrd.model.Product">
+        select p.id, p.name, p.prod_describe,p.productimg, p.imgname, p.price, p.deadline, p.deadunit, p.deadprice,
+        p.crtuser, DATE_FORMAT(p.crtdate, '%Y-%m-%d') crtdate from product p
+        where 1=1
+        <if test="name != null and name != ''">
+            and name like CONCAT('%', #{name}, '%')
+        </if>
+    </select>
+    <select id="getProductById" resultType="com.rrd.model.Product">
+        select p.id, p.name, p.prod_describe,p.productimg, p.imgname, p.price, p.deadline, p.deadunit, p.deadprice,
+        p.crtuser, DATE_FORMAT(p.crtdate, '%Y-%m-%d') crtdate from product p where id = #{id}
+    </select>
+
+    <insert id="addProduct">
+        insert into product (name, prod_describe, price, deadline, deadunit, deadprice,
+        productimg,imgname, crtuser, crtdate, upduser, upddate, recsts)
+         VALUE (#{name}, #{prod_describe}, #{price}, #{deadline}, #{deadunit}, #{deadprice},
+         #{productimg},#{imgname}, #{crtuser}, now(), #{crtuser}, now(), '1' )
+    </insert>
+
+    <update id="updProduct">
+        update product set name = #{name}, prod_describe = #{prod_describe}, price = #{price}, deadline = #{deadline},
+         deadprice = #{deadprice}, productimg = #{productimg}, imgname = #{imgname}, upduser = #{upduser}, upddate = now()  where id = #{id}
+    </update>
+</mapper>
