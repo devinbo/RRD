@@ -6,4 +6,5 @@ package com.rrd.constant;
 public class FileConfig {
 
     public final static String FILE_PRUDDIR = "C:/upload/product";
+    public final static String FILE_BOOK = "C:/upload/book";
 }

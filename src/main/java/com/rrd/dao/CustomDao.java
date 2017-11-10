@@ -1,7 +1,7 @@
 package com.rrd.dao;
 
 import com.rrd.model.Custom;
-import com.rrd.pjo.Result;
+import com.rrd.model.User;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -20,9 +20,9 @@ public interface CustomDao {
 
     void updateCustom(Custom custom);
 
-    Result delCustom(@Param("ids") List<String> ids);
+    void delCustom(@Param("ids") List<String> ids);
 
-    List<Custom> getCustomList(@Param("param") Map<String, String> param);
+    List<Custom> getCustomList(@Param("param") Map<String, String> param, @Param("user") User user);
 
     Custom getCustomById(@Param("id") String id);
 
@@ -37,4 +37,26 @@ public interface CustomDao {
     int getCustomWithPhone(@Param("phone") String phone, @Param("id") Long id);
 
     List<Map<String,Object>> getAuthList(@Param("param") Map<String, Object> param);
+
+    List<Custom> getAllCus(@Param("key") String key, @Param("size") Integer size);
+
+    List<Custom> getAllOnlineCus(@Param("key") String key, @Param("size") Integer size);
+
+    List<User> getAllCusWithKf(@Param("key") String key, @Param("size") Integer size);
+
+    List<Custom> getWorkAuthList(Custom custom);
+
+    void passWorkAuth(@Param("custom_id") String custom_id);
+
+    void refuseWorkAuth(@Param("custom_id") String custom_id);
+
+    List<Custom> getLinkAuthList(Custom custom);
+
+    void passLinkAuth(@Param("custom_id") String custom_id);
+
+    void refuseLinkAuth(@Param("custom_id") String custom_id);
+
+    void addStudent(Custom custom);
+
+    void updateStudent(Custom custom);
 }

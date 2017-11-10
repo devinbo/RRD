@@ -22,12 +22,13 @@ public class User implements Serializable{
     private String upddate;
     private String recsts;
     private Boolean adminflg;
-    private Integer part;
+    private String part;
     private String partname;
-    private Integer part_job;
+    private String part_job;
     private String partjobname;
     private String m_role_id;
     private String role_name;
+    private String tzauth;
 
     public Long getId() {
         return id;
@@ -149,12 +150,20 @@ public class User implements Serializable{
         this.adminflg = adminflg;
     }
 
-    public Integer getPart() {
+    public String getPart() {
         return part;
     }
 
-    public void setPart(Integer part) {
+    public void setPart(String part) {
         this.part = part;
+    }
+
+    public String getPart_job() {
+        return part_job;
+    }
+
+    public void setPart_job(String part_job) {
+        this.part_job = part_job;
     }
 
     public String getPartname() {
@@ -165,13 +174,6 @@ public class User implements Serializable{
         this.partname = partname;
     }
 
-    public Integer getPart_job() {
-        return part_job;
-    }
-
-    public void setPart_job(Integer part_job) {
-        this.part_job = part_job;
-    }
 
     public String getPartjobname() {
         return partjobname;
@@ -195,5 +197,13 @@ public class User implements Serializable{
 
     public void setRole_name(String role_name) {
         this.role_name = role_name;
+    }
+
+    public String getTzauth() {
+        return tzauth;
+    }
+
+    public void setTzauth(String tzauth) {
+        this.tzauth = tzauth;
     }
 }

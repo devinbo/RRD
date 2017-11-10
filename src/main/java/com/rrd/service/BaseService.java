@@ -30,4 +30,8 @@ public interface BaseService {
     Result andOrUpdPruduct(Product product);
 
     Result getProductById(String id);
+
+    Result getAllProduct();
+
+    Result delProduct(String ids);
 }

@@ -4,6 +4,8 @@ import com.github.pagehelper.PageInfo;
 import com.rrd.model.User;
 import com.rrd.pjo.Result;
 
+import java.util.Map;
+
 /**
  * Created by Administrator on 2017/10/12.
  */
@@ -17,4 +19,6 @@ public interface UserService {
     Result delUser(String ids);
 
     Result andOrSaveUser(User user);
+
+    Result tzAuth(Map<String, String> params);
 }

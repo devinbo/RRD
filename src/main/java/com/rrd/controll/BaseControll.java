@@ -1,8 +1,10 @@
 package com.rrd.controll;
 
 import com.github.pagehelper.PageInfo;
+import com.rrd.model.Custom;
 import com.rrd.model.Product;
 import com.rrd.pjo.Result;
+import com.rrd.plugin.JedisHelper;
 import com.rrd.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,17 @@ public class BaseControll {
 
     @Autowired
     private BaseService baseService;
+
+    @Autowired
+    private JedisHelper jedisHelper;
+
+    @PostMapping("test")
+    public Result test() throws Exception {
+        System.out.println(jedisHelper.get("custom_1"));
+        Custom custom = jedisHelper.getObj("custom_1", Custom.class);
+        System.out.println(custom.getBirthday());
+        return new Result();
+    }
 
     @PostMapping("getdict")
     public List<Map<String, Object>> getDict(String dict_code) {
@@ -83,5 +96,15 @@ public class BaseControll {
     @PostMapping("getProductById")
     public Result getProductById(String id) {
         return baseService.getProductById(id);
+    }
+
+    @RequestMapping("getAllProduct")
+    public Result getAllProduct() {
+        return baseService.getAllProduct();
+    }
+
+    @RequestMapping("delProduct")
+    public Result delProduct(String ids) {
+        return baseService.delProduct(ids);
     }
 }

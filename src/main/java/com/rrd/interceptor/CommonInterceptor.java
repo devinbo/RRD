@@ -36,6 +36,7 @@ public class CommonInterceptor implements HandlerInterceptor {
         user.setUsername("管理员");
         user.setAdminflg(true);
         user.setM_role_id("18");
+        user.setTzauth("1,2,3,4");
         //设置session
         request.getSession().setAttribute("user", user);
         response.setHeader("Access-Control-Allow-Origin", "*");

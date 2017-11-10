@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.rrd.dao.BaseDao">
-    <insert id="addRoleRel"  keyColumn="id">
+    <insert id="addRoleRel" keyColumn="id">
         insert INTO m_roletask_rel (m_task_id, m_role_id) values (#{param.taskids},#{param.m_role_id} )
     </insert>
     <insert id="addRole" keyColumn="m_role_id" keyProperty="param.m_role_id">
@@ -54,7 +54,7 @@
     </select>
     <select id="getAllTask" resultType="java.util.Map">
          select  o.task_name,o.m_task_id,o.parent_id ,
-        (SELECT i.task_name from m_task i where  i.M_TASK_ID = o.PARENT_ID )parent_nm
+        (SELECT i.task_name from m_task i where  i.M_TASK_ID = o.PARENT_ID ) parent_nm
         from m_task o
     </select>
     <select id="getRole" resultType="java.lang.Integer">
@@ -68,27 +68,49 @@
     </select>
 
     <select id="getproductList" resultType="com.rrd.model.Product">
-        select p.id, p.name, p.prod_describe,p.productimg, p.imgname, p.price, p.deadline, p.deadunit, p.deadprice,
-        p.crtuser, DATE_FORMAT(p.crtdate, '%Y-%m-%d') crtdate from product p
-        where 1=1
+        select p.id, p.state, p.name, p.prod_describe,p.productimg, p.imgname, p.price, p.deadline, p.deadunit, p.deadprice,
+        p.crtuser, p.expiryrate, DATE_FORMAT(p.crtdate, '%Y-%m-%d') crtdate from product p
+        where recsts = '1'
         <if test="name != null and name != ''">
             and name like CONCAT('%', #{name}, '%')
         </if>
     </select>
+
     <select id="getProductById" resultType="com.rrd.model.Product">
-        select p.id, p.name, p.prod_describe,p.productimg, p.imgname, p.price, p.deadline, p.deadunit, p.deadprice,
-        p.crtuser, DATE_FORMAT(p.crtdate, '%Y-%m-%d') crtdate from product p where id = #{id}
+        select p.id, p.state, p.name, p.prod_describe,p.productimg, p.imgname, p.price, p.deadline, p.deadunit, p.deadprice,
+        p.crtuser,p.expiryrate, DATE_FORMAT(p.crtdate, '%Y-%m-%d') crtdate from product p where id = #{id}
+    </select>
+
+    <!--获取所有的上线订单-->
+    <select id="getAllProduct" resultType="com.rrd.model.Product">
+        select id, name from product where recsts = '1' and state = '1'
+    </select>
+
+    <select id="hasProdUctWithName" resultType="java.lang.Integer">
+        select count(*) from product where recsts = '1' and name = #{name}
+        <if test="id != null">
+            and id &lt;> #{id}
+        </if>
     </select>
 
     <insert id="addProduct">
-        insert into product (name, prod_describe, price, deadline, deadunit, deadprice,
-        productimg,imgname, crtuser, crtdate, upduser, upddate, recsts)
-         VALUE (#{name}, #{prod_describe}, #{price}, #{deadline}, #{deadunit}, #{deadprice},
-         #{productimg},#{imgname}, #{crtuser}, now(), #{crtuser}, now(), '1' )
+        insert into product (state, name, prod_describe, price, deadline, deadunit, expiryrate, deadprice,
+        productimg,imgname, serverfee, crtuser, crtdate, upduser, upddate, recsts)
+         VALUE (#{state}, #{name}, #{prod_describe}, #{price}, #{deadline}, #{deadunit}, #{expiryrate}, #{deadprice},
+         #{productimg},#{imgname}, #{serverfee}, #{crtuser}, now(), #{crtuser}, now(), '1' )
     </insert>
 
     <update id="updProduct">
-        update product set name = #{name}, prod_describe = #{prod_describe}, price = #{price}, deadline = #{deadline},
-         deadprice = #{deadprice}, productimg = #{productimg}, imgname = #{imgname}, upduser = #{upduser}, upddate = now()  where id = #{id}
+        update product set state = #{state}, name = #{name}, prod_describe = #{prod_describe}, price = #{price}, deadline = #{deadline},
+         deadprice = #{deadprice}, productimg = #{productimg}, serverfee = #{serverfee}, expiryrate = #{expiryrate}, imgname = #{imgname}, upduser = #{upduser}, upddate = now()  where id = #{id}
     </update>
+
+    <update id="delProduct">
+        update product set recsts = 'D' where id IN
+        <foreach collection="ids" item="id" open="(" close=")">#{id}</foreach>
+    </update>
+
+    <select id="getAllPullAuth" resultType="java.util.Map">
+        select data_code, data_name  from bs_basedict where dict_code = 'TZ001'
+    </select>
 </mapper>

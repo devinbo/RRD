@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.rrd.dao.BookDao">
+
+    <update id="delBook">
+        update book set recsts = 'D' where book_id in <foreach collection="ids" separator="," item="id" open="(" close=")">#{id}</foreach>
+    </update>
+
+    <update id="delBill">
+        update bill set recsts = 'D' where book_id in <foreach collection="ids" separator="," item="id" open="(" close=")">#{id}</foreach>
+    </update>
+
+    <update id="updateBookRepay">
+        update book set currrepay = #{currrepay}, remainfee = #{remainfee}, repaydate = #{repaydate}, book_state = #{book_state} where book_id = #{book_id}
+    </update>
+
+    <update id="updBill">
+        update bill set state = #{state}, expiryfee = #{expiryfee}, repayfee = #{repayfee}, servicefee = #{servicefee},
+         targetdate = #{targetdate}, realdate = #{realdate}, upddate = now(), upduser = #{upduser} where id = #{id}
+    </update>
+
+    <!--更新费用状态信息-->
+    <update id="updateBookFeeInfo">
+        update book set remainfee = (ifnull(remainfee, 0) + #{remainfee}),
+        currrepay = (ifnull(currrepay, 0) + #{currrepay}), expiryfee = (ifnull(expiryfee, 0) + #{expiryfee}),
+        serverfee = (ifnull(serverfee, 0) + #{serverfee}),
+        book_state = (select (case when state = '3' then 4 when state = '2' then 1 else 3 end) from bill b where b.book_id = #{book_id}
+        order by case state when '3' then 1 when '4' then 2 when '1' then 3 when '2' then 4 end  limit 1)
+        where book_id = #{book_id}
+    </update>
+
+    <select id="getBookList" resultType="com.rrd.model.Book">
+        SELECT b.book_id, b.book_no,custom.phone cusphone, custom.name cusname,b.start_date,
+        (select p.name from product p where p.id = b.product_id) product_name,b.provefile,
+        book_state, expiryfee, serverfee,currrepay, b.crtuser,b.crtdate, b.recsts, b.repaydate, b.remainfee
+        from book b left join custom  on b.custom_id = custom.custom_id
+        <where>
+            ((b.recsts = '1' and b.audit_state = '2') or b.recsts = '2')
+            <if test="book.custom_id != null">
+                and b.custom_id = #{book.custom_id}
+            </if>
+            <if test="book.book_no != null and book.book_no != ''">
+                and book_no like CONCAT('%', #{book.book_no}, '%')
+            </if>
+            <include refid="com.rrd.dao.CustomDao.userRuleSql"></include>
+        </where>
+    </select>
+
+    <select id="getProductInfo" resultType="com.rrd.model.Product">
+        SELECT p.id, p.name, p.price, p.deadline, p.deadunit, p.deadprice from product p where id = #{product_id}
+    </select>
+
+    <select id="getBIllList" resultType="com.rrd.model.Bill">
+        select b.book_id, b.id, b.product, b.period, b.state,
+        (select data_name from bs_basedict where dict_code = 'BK002' and data_code = b.state) statenm,
+        b.targetdate, b.realdate, b.basefee,
+         b.basefee, b.expiryfee, b.servicefee, b.repayfee, b.crtdate from bill b where b.book_id = #{book_id}
+    </select>
+
+    <select id="getBookById" resultType="com.rrd.model.Book">
+        select book_id, book_no, product_id, custom_id, (select name from custom c where c.custom_id = b.custom_id) cusname from book b where book_id = #{id}
+    </select>
+
+    <select id="getBillById" resultType="com.rrd.model.Bill">
+        select id, b.book_id, bk.book_no, bk.custom_id, (select name from custom c where c.custom_id = bk.custom_id) cusname, b.period, b.
+        state,(select data_name from bs_basedict where dict_code = 'BK002' and data_code = state) statenm,
+         b.targetdate, b.realdate, b.repayfee, b.basefee, b.expiryfee, b.servicefee  from bill b left join book bk on b.book_id = bk.book_id
+          where id = #{id}
+    </select>
+
+    <select id="getAuditBook" resultType="java.util.Map">
+         select p.name product_name, p.deadline, p.deadunit, p.deadprice, p.price, audit_state,audit_errmemo,
+          c.name cusname, c.phone cusphone, b.book_no, b.book_id, b.custom_id,
+         c.isrealauth,c.isphoneauth, c.isworkauth, c.iseducauth, c.islinkauth, DATE_FORMAT(b.crtdate, '%Y-%m-%d %T') crtdate
+          from book b left join product p on b.product_id = p.id
+          left join custom c on b.custom_id = c.custom_id
+         where 1 =1
+         <if test="custom_id != null and custom_id != ''">
+             and c.custom_id = #{custom_id}
+         </if>
+        <if test="audit_state != null and audit_state != ''">
+            and b.audit_state = #{audit_state}
+        </if>
+        <if test="audit_state == null or audit_state == ''">
+            and audit_state = '1'
+        </if>
+    </select>
+
+    <select id="getOperDesc" resultType="java.util.Map">
+        SELECT oper_state, oper_desc, custom_id,cusname, book_no, crtdate, crtuser from bookoper_log
+        <where>
+            <if test="param.custom_id != null and param.custom_id != ''">
+                and custom_id = #{param.custom_id}
+            </if>
+            <if test="param.book_no != null and param.book_no != ''">
+                and book_no = #{param.book_no}
+            </if>
+            <if test="param.oper_state != null and param.oper_state != ''">
+                and oper_state = #{param.oper_state}
+            </if>
+        </where>
+    </select>
+
+    <select id="getAllBook" resultType="com.rrd.model.Book">
+        select book_id from book where (book_state = '3' or book_state = '4') and audit_state = '2' and recsts = '1'
+    </select>
+
+    <!--内部生产主订单信息， 生成线下订单-->
+    <insert id="addBook" useGeneratedKeys="true" keyProperty="book_id" keyColumn="book_id">
+        INSERT INTO book(custom_id, crtuser, crtdate, upduser,
+        upddate, recsts, book_no, product_id, start_date)
+         VALUE (#{custom_id}, #{crtuser}, now(), #{crtuser}, now(), '2', #{book_no}, #{product_id},#{start_date})
+    </insert>
+
+    <insert id="addBill">
+        INSERT INTO bill(period, book_id, product, state, targetdate,realdate, basefee,repayfee,
+          crtuser, crtdate, upduser, upddate, recsts)
+          VALUES <foreach collection="bills" separator="," item="bill">
+        (#{bill.period}, #{bill.book_id}, #{bill.product},#{bill.state}, #{bill.targetdate}, #{bill.realdate}, #{bill.repayfee},
+         #{bill.basefee}, #{bill.crtuser}, now(), #{bill.crtuser}, now(), '1')
+        </foreach>
+    </insert>
+
+    <insert id="addBookOperLog">
+        insert into bookoper_log (book_id, book_no, custom_id, cusname, oper_state, oper_desc, crtuser, crtdate)
+             VALUE (#{book_id}, #{book_no}, #{custom_id}, #{cusname}, #{state}, #{desc}, #{username}, now())
+    </insert>
+
+    <insert id="intsertMsg">
+        insert into cus_msg(custom_id, content, crtdate)
+        VALUE (#{custom_id}, #{content}, now())
+    </insert>
+
+    <!--根据订单更新费用信息-->
+    <update id="updBookWithBill">
+        update book set
+        repaydate = ifnull((select max(targetdate) from bill where (state = '3' or state = '4') and bill.book_id = #{book_id}), CURDATE()),
+        serverfee = ifnull((select sum(servicefee) from bill where (state = '3' or state = '4') and bill.book_id = #{book_id}), 0),
+        expiryfee = ifnull((select sum(expiryfee) from bill where state = '3' and bill.book_id = #{book_id}), 0),
+        remainfee = ifnull((select sum(basefee) from bill where state = '1' and bill.book_id = #{book_id}), 0),
+        currrepay =  ifnull((select sum(repayfee) from bill where (state = '3' or state = '4') and bill.book_id = #{book_id}), 0),
+        book_state = (select (case when state = '3' then 4 when state = '2' then 1 else 3 end) from bill b where b.book_id = #{book_id}
+        order by case state when '3' then 1 when '4' then 2 when '1' then 3 when '2' then 4 end  limit 1)
+         where book_id = #{book_id}
+    </update>
+
+    <update id="refusetAudit">
+        update book set audit_state = '3', audit_errmemo = #{audit_errmemo} where book_id = #{book_id}
+    </update>
+
+    <update id="passAudit">
+        update book b set audit_state = '2', provefile = #{provefile}, start_date = now(),
+        repaydate = ifnull((select max(targetdate) from bill where recsts = '1' and  (state = '3' or state = '4') and bill.book_id = ${book_id}), CURDATE()),
+        serverfee = ifnull((select sum(servicefee) from bill where recsts = '1' and  (state = '3' or state = '4')  and bill.book_id = ${book_id}), 0),
+        expiryfee = ifnull((select sum(expiryfee) from bill where recsts = '1' and  state = '3' and bill.book_id =  ${book_id}), 0),
+        remainfee = ifnull((select sum(basefee) from bill where  recsts = '1' and state = '1' and bill.book_id =  ${book_id}), 0),
+        currrepay =  ifnull((select sum(repayfee) from bill where recsts = '1' and  (state = '3' or state = '4') and bill.book_id =  ${book_id}), 0),
+        book_state = (select (case when state = '3' then 4 when state = '2' then 1 else 3 end) from bill where recsts = '1' and  bill.book_id = ${book_id}
+        order by case state when '3' then 1 when '4' then 2 when '1' then 3 when '2' then 4 end  limit 1)
+        where book_id = #{book_id}
+    </update>
+    
+    <update id="updBillToComp">
+        update bill set state = '2' where book_id = #{book_id}
+    </update>
+
+    <!--更新逾期费用-->
+    <update id="updateExprodBill">
+        UPDATE bill b SET repayfee = (ifnull(repayfee, 0) + (basefee * (SELECT ifnull(expiryrate, 0) FROM product WHERE id = (SELECT product_id FROM book WHERE book_id = b.book_id)))),
+        expiryfee = (ifnull(expiryfee, 0) + (basefee * (SELECT ifnull(expiryrate, 0) FROM product WHERE id = (SELECT product_id FROM book WHERE book_id = b.book_id))))
+        WHERE b.book_id IN (SELECT book_id FROM book WHERE  recsts = '1' AND (book_state = '3' OR book_state = '4'))
+         AND b.state = '3' and recsts &lt;> 'D'
+    </update>
+
+    <update id="updateCurrBill">
+        UPDATE bill b SET repayfee = (ifnull(repayfee, 0) + (basefee * (SELECT ifnull(expiryrate, 0) FROM product WHERE id = (SELECT product_id FROM book WHERE book_id = b.book_id)))),
+        expiryfee = (ifnull(expiryfee, 0) + (basefee * (SELECT ifnull(expiryrate, 0) FROM product WHERE id = (SELECT product_id FROM book WHERE book_id = b.book_id)))),
+        b.state = '3'
+        WHERE b.book_id IN (SELECT book_id FROM book WHERE  recsts = '1' AND (book_state = '3' OR book_state = '4'))
+        AND b.state = '4' and  b.recsts &lt;> 'D' and b.targetdate &lt; curdate()
+    </update>
+
+    <update id="updateNoStartToCurrBill">
+        UPDATE bill b SET b.state = '4'
+        WHERE b.recsts &lt;> 'D' AND b.state = '1'
+        AND b.targetdate &lt;= date_sub(now(),interval ${timeday} DAY)
+    </update>
+
+    <update id="updBookState">
+        update book b set
+        repaydate = ifnull((select max(targetdate) from bill where (state = '3' or state = '4') and bill.book_id = #{book_id}), CURDATE()),
+        serverfee = ifnull((select sum(servicefee) from bill where (state = '3' or state = '4')  and bill.book_id = b.book_id), 0),
+        expiryfee = ifnull((select sum(expiryfee) from bill where state = '3' and bill.book_id =  b.book_id), 0),
+        remainfee = ifnull((select sum(basefee) from bill where state = '1' and bill.book_id =  b.book_id), 0),
+        currrepay =  ifnull((select sum(repayfee) from bill where (state = '3' or state = '4') and bill.book_id =  b.book_id), 0),
+        book_state = (select (case when state = '3' then 4 when state = '2' then 1 else 3 end) from bill where b.book_id = bill.book_id
+        order by case state when '3' then 1 when '4' then 2 when '1' then 3 when '2' then 4 end  limit 1)
+         where recsts &lt;> 'D'
+    </update>
+
+    <select id="getBookWithYq" resultType="com.rrd.model.Book">
+        select expiryfee, custom_id, book_no from book where book_state = '4' and recsts = '1'
+    </select>
+
+    <select id="getStateBill" resultType="java.util.Map">
+        select sum(basefee) basefee from bill
+        <where>
+            and targetdate >= #{param.start_date} and targetdate &lt;= #{param.end_date}
+            <include refid="statWhere"></include>
+        </where>
+    </select>
+    <select id="getRepayBill" resultType="java.util.Map">
+        select sum(repayfee) repayfee from bill
+        <where>
+            and state = '2' and realdate >= #{param.start_date} and realdate &lt;= #{param.end_date}
+            <include refid="statWhere"></include>
+        </where>
+    </select>
+
+    <sql id="statWhere">
+        and recsts = '1'
+        <if test="param.recsts != null and param.recsts != ''">
+            and (select recsts from book b where b.book_id = bill.book_id) = #{param.recsts}
+        </if>
+        <if test="param.custom_id != null and param.custom_id != ''">
+            and (select custom_id from book b where b.book_id = bill.book_id) = #{param.custom_id}
+        </if>
+    </sql>
+    <select id="getBillBasefeeList" resultType="java.util.Map">
+        select ifnull(sum(basefee), 0) basefee from bill where targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 1 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(basefee), 0) basefee from bill where targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 2 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(basefee), 0) basefee from bill where targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 3 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(basefee), 0) basefee from bill where targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 4 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(basefee), 0) basefee from bill where targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 5 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(basefee), 0) basefee from bill where 1 = 1
+        <include refid="statWhere"></include>
+    </select>
+
+    <select id="getBillRepayFeeList" resultType="java.util.Map">
+        select ifnull(sum(repayfee), 0) repayfee from bill where state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 1 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(repayfee), 0) repayfee from bill where state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 2 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(repayfee), 0) repayfee from bill where state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 3 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(repayfee), 0) repayfee from bill where state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 4 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(repayfee), 0) repayfee from bill where state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 5 WEEK)
+        <include refid="statWhere"></include>
+        UNION ALL
+        select ifnull(sum(repayfee), 0) repayfee from bill where state = '2'
+        <include refid="statWhere"></include>
+    </select>
+    <select id="getAllProduct" resultType="com.rrd.model.Product">
+        select product_id,deadunit from product and recsts &lt;> 'D'
+    </select>
+
+    <select id="billstatedet" resultType="java.util.Map">
+        SELECT b.book_id, b.id, b.product, b.period, b.state,
+        (select data_name from bs_basedict where dict_code = 'BK002' and data_code = b.state) statenm,
+        b.targetdate, b.realdate, b.basefee,
+        b.basefee, b.expiryfee, b.servicefee, b.repayfee, b.crtdate from bill b
+        <where>
+            <!--查询本金-->
+            <if test="param.datatype == 0">
+                <!--查询固定时间段-->
+                <if test="param.type == -1">
+                    and targetdate >= #{param.start_date} and targetdate &lt;= #{param.end_date}
+                </if>
+                <!--本周-->
+                <if test="param.type == 0">
+                    and targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 1 WEEK)
+                </if>
+                <if test="param.type == 1">
+                    and targetdate &lt;= DATE_SUB(CURDATE(),INTERVAL 1 WEEK) and targetdate > DATE_SUB(CURDATE(),INTERVAL 2 WEEK)
+                </if>
+                <if test="param.type == 2">
+                    and targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 3 WEEK)
+                </if>
+                <if test="param.type == 3">
+                    and targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 4 WEEK)
+                </if>
+                <if test="param.type == 4">
+                    and targetdate &lt;= CURDATE() and targetdate > DATE_SUB(CURDATE(),INTERVAL 5 WEEK)
+                </if>
+                <if test="param.type == 5">
+                    and 1 = 1
+                </if>
+                <include refid="statWhere"></include>
+            </if>
+            <!--查询应付-->
+            <if test="param.datatype == 1">
+                <!--查询固定时间段-->
+                <if test="param.type == -1">
+                    and state = '2' and realdate >= #{param.start_date} and realdate &lt;= #{param.end_date}
+                </if>
+                <!--本周-->
+                <if test="param.type == 0">
+                    and state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 1 WEEK)
+                </if>
+                <if test="param.type == 1">
+                    and state = '2' and realdate &lt;= DATE_SUB(CURDATE(),INTERVAL 1 WEEK) and realdate > DATE_SUB(CURDATE(),INTERVAL 2 WEEK)
+                </if>
+                <if test="param.type == 2">
+                    and state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 3 WEEK)
+                </if>
+                <if test="param.type == 3">
+                    and state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 4 WEEK)
+                </if>
+                <if test="param.type == 4">
+                    and state = '2' and realdate &lt;= CURDATE() and realdate > DATE_SUB(CURDATE(),INTERVAL 5 WEEK)
+                </if>
+                <if test="param.type == 5">
+                    and 1 = 1
+                </if>
+                <include refid="statWhere"></include>
+            </if>
+        </where>
+    </select>
+    <select id="getCustomInfo" resultType="java.util.Map">
+        select c.name, c.phone, b.book_no from book b left join custom c on b.custom_id = c.custom_id where b.book_id = #{book_id}
+    </select>
+
+
+</mapper>

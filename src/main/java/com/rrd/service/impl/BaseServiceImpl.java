@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -183,7 +184,7 @@ public class BaseServiceImpl implements BaseService {
 
     @Override
     public Result getAllMenues(Map<String, Object> params) {
-        String selectedrole = params.get("rolenm").toString();//选中的角色名
+        String selectedrole = params.get("rolenm") == null ? "" : params.get("rolenm").toString();//选中的角色名
         String role_tasks = "";
         String[] role_task_ids = new String[]{};
         if (selectedrole != null && selectedrole.length() > 0) {
@@ -378,11 +379,20 @@ public class BaseServiceImpl implements BaseService {
 
     @Override
     public Result andOrUpdPruduct(Product product) {
+        //查询产品名称是否重复
+        int num = baseDao.hasProdUctWithName(product.getId(), product.getName());
+        if(num > 0 ) {
+            return new Result(ResCode.Error.value(), "产品名称已存在");
+        }
         if (product.getId() == null) {
             product.setCrtuser(getUser().getUsername());
+            //设置产品每期价格
+            setProductDeadFee(product);
             baseDao.addProduct(product);
         } else {
             product.setUpduser(getUser().getUsername());
+            //设置产品每期价格
+            setProductDeadFee(product);
             baseDao.updProduct(product);
         }
         return new Result();
@@ -394,12 +404,33 @@ public class BaseServiceImpl implements BaseService {
         return new Result(product);
     }
 
+    @Override
+    public Result getAllProduct() {
+        List<Product> list = baseDao.getAllProduct();
+        return new Result(list);
+    }
+
+    @Override
+    public Result delProduct(String ids) {
+        baseDao.delProduct(PublicUtil.toListByIds(ids));
+        return new Result();
+    }
+
     /**
      * 获取登录的用户
-     *
      * @return
      */
     private User getUser() {
         return (User) request.getSession().getAttribute("user");
+    }
+
+
+    public void setProductDeadFee(Product product) {
+        //总费用
+        BigDecimal price = product.getPrice();
+        //期限
+        Integer deadLine = product.getDeadline();
+        BigDecimal deadPirce = price.divide(new BigDecimal(deadLine), 2, BigDecimal.ROUND_CEILING);
+        product.setDeadprice(deadPirce);
     }
 }

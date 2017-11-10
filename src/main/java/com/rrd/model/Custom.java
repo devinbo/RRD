@@ -8,6 +8,7 @@ import java.io.Serializable;
  * Created by Administrator on 2017/10/12.
  */
 public class Custom implements Serializable{
+
     private Long custom_id;
     private String phone;
     private String password;
@@ -21,9 +22,13 @@ public class Custom implements Serializable{
     private String isrealauth; // 是否实名认证  1:已认证 2:认证失败 3:尚未认证 4:认证中
     private String isphoneauth; //是否手机认证  1:已认证 2:认证失败 3:尚未认证 4:认证中
     private String iseducauth; //是否学历认证1:已认证 2:认证失败 3:尚未认证 4:认证中
+    private String islinkauth; //是否联系人认证
+    private String isworkauth; //是否工作认证
     private String isrealauthnm;
     private String isphoneauthnm;
     private String iseducauthnm;
+    private String islinkauthnm;
+    private String isworkauthnm;
     private String wechat; //微信账号
     private String alipay; //支付宝账号
     private String homecell; //家庭电话
@@ -32,6 +37,7 @@ public class Custom implements Serializable{
     private String birthday;  //身份证出生年月
     private String placeaddress; //现居住地址
     private Boolean haswork;  //是否有工作
+
     /**学历信息**/
     private Long educ_id;
     private String  purpose; //最高学历
@@ -43,6 +49,17 @@ public class Custom implements Serializable{
     private String  dategraduation; //入校时间
     private String  graduationstatus; //入校时间
 
+    /**在校生信息**/
+    private String student; //学生id
+    private String college; // 就读学校
+    private String start_date;
+    private String specialty;
+    private String dorm;
+
+    private String picture;
+
+    private String school;
+    private String loginoutdate;
     /**工作信息**/
 //    private String eductype; //最高学籍
     private Long work_id;
@@ -56,6 +73,7 @@ public class Custom implements Serializable{
     private String currwork_address; //单位地址
     private String currwork_cell;  //单位电话
     private String company_sort; //现单位的性质
+    private String company_sortnm;
     private String job; //当前职业
     private String jobnm;
     private String income; //个人月收入
@@ -69,7 +87,11 @@ public class Custom implements Serializable{
     private String twolinkrealation; //联系人2 与你的关系
     private String twolinkrealationnm;
     private String twolinkcell; //联系人2 电话
+    private String linkapplydate; //联系人申请认证时间
+
     private Long kf_id; //客服人员
+    private String kf_name; //客服名称
+    private String kf_wechat; //客服微信号
     private String source; //来源1：app 2:内部添加
     private String crtdate;
     private String crtuser;
@@ -77,6 +99,26 @@ public class Custom implements Serializable{
     private String upddate;
     private String recsts;
 
+    //创建人信息
+    private String part; //c创建人所在部门
+    private String part_job; //部门员工， 部门总监
+
+
+    public String getPart() {
+        return part;
+    }
+
+    public void setPart(String part) {
+        this.part = part;
+    }
+
+    public String getPart_job() {
+        return part_job;
+    }
+
+    public void setPart_job(String part_job) {
+        this.part_job = part_job;
+    }
 
     public Long getCustom_id() {
         return custom_id;
@@ -181,6 +223,14 @@ public class Custom implements Serializable{
 
     public void setWechat(String wechat) {
         this.wechat = wechat;
+    }
+
+    public String getCompany_sortnm() {
+        return company_sortnm;
+    }
+
+    public void setCompany_sortnm(String company_sortnm) {
+        this.company_sortnm = company_sortnm;
     }
 
     public String getHomecell() {
@@ -491,6 +541,40 @@ public class Custom implements Serializable{
         this.iseducauth = iseducauth;
     }
 
+    public String getIslinkauth() {
+        return islinkauth;
+    }
+
+    public void setIslinkauth(String islinkauth) {
+        if(islinkauth.equals(AuthCode.SUCCESS.getCode())) {
+            this.islinkauthnm = AuthCode.SUCCESS.getMsg();
+        }else if(islinkauth.equals(AuthCode.ERROR.getCode())) {
+            this.islinkauthnm = AuthCode.ERROR.getMsg();
+        }else if(islinkauth.equals(AuthCode.NOSTART.getCode())) {
+            this.islinkauthnm = AuthCode.NOSTART.getMsg();
+        }else if(islinkauth.equals(AuthCode.AUTHING.getCode())) {
+            this.islinkauthnm = AuthCode.AUTHING.getMsg();
+        }
+        this.islinkauth = islinkauth;
+    }
+
+    public String getIsworkauth() {
+        return isworkauth;
+    }
+
+    public void setIsworkauth(String isworkauth) {
+        if(isworkauth.equals(AuthCode.SUCCESS.getCode())) {
+            this.isworkauthnm = AuthCode.SUCCESS.getMsg();
+        }else if(isworkauth.equals(AuthCode.ERROR.getCode())) {
+            this.isworkauthnm = AuthCode.ERROR.getMsg();
+        }else if(isworkauth.equals(AuthCode.NOSTART.getCode())) {
+            this.isworkauthnm = AuthCode.NOSTART.getMsg();
+        }else if(isworkauth.equals(AuthCode.AUTHING.getCode())) {
+            this.isworkauthnm = AuthCode.AUTHING.getMsg();
+        }
+        this.isworkauth = isworkauth;
+    }
+
     public String getIsrealauthnm() {
         return isrealauthnm;
     }
@@ -619,4 +703,107 @@ public class Custom implements Serializable{
         this.work_id = work_id;
     }
 
+    public String getIslinkauthnm() {
+        return islinkauthnm;
+    }
+
+    public void setIslinkauthnm(String islinkauthnm) {
+        this.islinkauthnm = islinkauthnm;
+    }
+
+    public String getIsworkauthnm() {
+        return isworkauthnm;
+    }
+
+    public void setIsworkauthnm(String isworkauthnm) {
+        this.isworkauthnm = isworkauthnm;
+    }
+
+    public String getKf_name() {
+        return kf_name;
+    }
+
+    public void setKf_name(String kf_name) {
+        this.kf_name = kf_name;
+    }
+
+    public String getKf_wechat() {
+        return kf_wechat;
+    }
+
+    public void setKf_wechat(String kf_wechat) {
+        this.kf_wechat = kf_wechat;
+    }
+
+    public String getLinkapplydate() {
+        return linkapplydate;
+    }
+
+    public void setLinkapplydate(String linkapplydate) {
+        this.linkapplydate = linkapplydate;
+    }
+
+    public String getCollege() {
+        return college;
+    }
+
+    public void setCollege(String college) {
+        this.college = college;
+    }
+
+    public String getStart_date() {
+        return start_date;
+    }
+
+    public void setStart_date(String start_date) {
+        this.start_date = start_date;
+    }
+
+    public String getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
+    }
+
+    public String getDorm() {
+        return dorm;
+    }
+
+    public void setDorm(String dorm) {
+        this.dorm = dorm;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public String getStudent() {
+        return student;
+    }
+
+    public void setStudent(String student) {
+        this.student = student;
+    }
+
+    public String getSchool() {
+        return school;
+    }
+
+    public void setSchool(String school) {
+        this.school = school;
+    }
+
+    public String getLoginoutdate() {
+        return loginoutdate;
+    }
+
+    public void setLoginoutdate(String loginoutdate) {
+        this.loginoutdate = loginoutdate;
+    }
 }

@@ -12,11 +12,13 @@
     <!--<mvc:annotation-driven />-->
     <context:annotation-config></context:annotation-config>
     <context:component-scan base-package="com.rrd.*"/>
+    <!--自动什么aop注解-->
+    <aop:aspectj-autoproxy/>
     <bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
         <property name="locations">
             <list>
                 <value>classpath:jdbc.properties</value>
-                <!--<value>classpath:redis.properties</value>-->
+                <value>classpath:redis.properties</value>
             </list>
         </property>
     </bean>
@@ -90,6 +92,23 @@
         <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
     </bean>
 
+
+
+    <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxWaitMillis" value="${redis.pool.maxWait}"></property>
+        <property name="maxTotal" value="${redis.pool.maxActive}"></property>
+        <property name="maxIdle" value="${redis.pool.maxIdle}"></property>
+    </bean>
+
+    <!--&lt;!&ndash; 配置redis连接&ndash;&gt;-->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory" destroy-method="destroy">
+        <property name="hostName" value="${redis.ip}"></property>
+        <property name="port" value="${redis.port}"></property>
+        <property name="password" value="${redis.requirepass}"></property>
+        <property name="poolConfig" ref="poolConfig"></property>
+    </bean>
+
+
     <!--配置事物切入点-->
     <aop:config>
         <aop:pointcut id="bussnessService" expression="(execution(public * com.rrd.service.*.*(..)))"></aop:pointcut>
@@ -114,6 +133,7 @@
         </tx:attributes>
     </tx:advice>
 
+
     <!--配置Druid的spirng监控-->
     <bean id="druid-stat-interceptor" class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor"></bean>
     <aop:config>
@@ -125,9 +145,10 @@
     <!--<bean id="myFristAspect" class="com.jzy.aspect.MyFristAspect"></bean>-->
 
     <!--引入定时工厂类-->
-    <!--<bean id="jobFactory" class="com.jzy.schedule.JobFactory"></bean>-->
-    <!--<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">-->
-        <!--<property name="jobFactory" ref="jobFactory"></property>-->
-    <!--</bean>-->
+    <bean id="jobFactory" class="com.rrd.schedule.JobFactory"></bean>
+
+    <bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+        <property name="jobFactory" ref="jobFactory"></property>
+    </bean>
 
 </beans>

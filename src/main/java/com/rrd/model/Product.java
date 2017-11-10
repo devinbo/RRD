@@ -9,16 +9,35 @@ public class Product {
     private String name;
     private String prod_describe;
     private BigDecimal price; //总价
-    private String deadline; //总期限数
+    private Integer deadline; //总期限数
     private String deadunit; //期限单位
     private BigDecimal deadprice; //每期价格
     private String productimg; //产品图片 base64
+    private BigDecimal expiryrate;
+    private BigDecimal serverfee;
+    private String state;
     private String imgname;
     private String crtuser;
     private String crtdate;
     private String upduser;
     private String upddate;
     private String recsts;
+
+    public BigDecimal getServerfee() {
+        return serverfee;
+    }
+
+    public void setServerfee(BigDecimal serverfee) {
+        this.serverfee = serverfee;
+    }
+
+    public BigDecimal getExpiryrate() {
+        return expiryrate;
+    }
+
+    public void setExpiryrate(BigDecimal expiryrate) {
+        this.expiryrate = expiryrate;
+    }
 
     public Long getId() {
         return id;
@@ -60,11 +79,11 @@ public class Product {
         this.price = price;
     }
 
-    public String getDeadline() {
+    public Integer getDeadline() {
         return deadline;
     }
 
-    public void setDeadline(String deadline) {
+    public void setDeadline(Integer deadline) {
         this.deadline = deadline;
     }
 
@@ -82,6 +101,14 @@ public class Product {
 
     public void setDeadprice(BigDecimal deadprice) {
         this.deadprice = deadprice;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 
     public String getCrtuser() {

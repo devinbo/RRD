@@ -7,6 +7,7 @@ import com.rrd.model.User;
 import com.rrd.pjo.ResCode;
 import com.rrd.pjo.Result;
 import com.rrd.service.UserService;
+import com.rrd.socket.MegSocketHandler;
 import com.rrd.utils.PublicUtil;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import org.springframework.util.DigestUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -76,6 +78,16 @@ public class UserServiceImpl implements UserService {
             user.setUpduser(currUser.getUsername());
             userDao.updateUser(user);
         }
+        return new Result();
+    }
+
+    @Override
+    public Result tzAuth(Map<String, String> params) {
+        String id = params.get("id");
+        String tzAuth = params.get("tzAuth");
+        userDao.tzAuth(id, tzAuth);
+        //加入通知中
+        MegSocketHandler.updateAuthData(Long.valueOf(id), PublicUtil.toListByIds(tzAuth));
         return new Result();
     }
 

@@ -7,7 +7,7 @@
         SELECT id, userno, loginname, username, cell, phone, email, qq, crtuser,
         DATE_FORMAT(crtdate, '%Y-%m-%d') crtdate, upduser, DATE_FORMAT(upddate, '%Y-%m-%d') upddate,
         part, (select data_name from bs_basedict where dict_code = 'YG001' and data_code = part) partname,
-        part_job, m_role_id, adminflg FROM user where binary loginname = #{loginname}
+        part_job, m_role_id, adminflg, tzauth FROM user where binary loginname = #{loginname}
         and password = #{password} and recsts = 1
     </select>
 
@@ -15,7 +15,8 @@
         SELECT id, userno, loginname, username, cell, phone, email, qq, crtuser,
         DATE_FORMAT(crtdate, '%Y-%m-%d') crtdate, upduser, DATE_FORMAT(upddate, '%Y-%m-%d') upddate,
         part, (select data_name from bs_basedict where dict_code = 'YG001' and data_code = part) partname,
-        part_job, m_role_id, adminflg, (select role_name from m_role m where m.m_role_id = u.m_role_id) role_name
+        part_job, m_role_id, adminflg, (select role_name from m_role m where m.m_role_id = u.m_role_id) role_name,
+        tzauth
         FROM user u
         <where>
             <if test="userno != null and userno != ''">
@@ -35,7 +36,10 @@
     </select>
 
     <select id="getUserByLoginNmOrNo" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM user where userno = #{userno} or loginname = #{loginname}
+        SELECT COUNT(*) FROM user where (userno = #{userno} or loginname = #{loginname})
+        <if test="id != null and id != ''">
+            and id &lt;> #{id}
+        </if>
     </select>
 
     <delete id="delUser">
@@ -53,5 +57,9 @@
         update user set userno = #{userno}, loginname = #{loginname}, username = #{username},
          cell = #{cell}, phone = #{phone}, email = #{email}, qq = #{qq}, upduser = #{upduser}, upddate = now(),
           part = #{part}, part_job = #{part_job} where id = #{id}
+    </update>
+
+    <update id="tzAuth">
+        update user set tzauth = #{tzAuth} where id = #{id}
     </update>
 </mapper>

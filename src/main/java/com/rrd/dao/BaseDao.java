@@ -45,4 +45,12 @@ public interface BaseDao {
     void updProduct(Product product);
 
     Product getProductById(String id);
+
+    List<Product> getAllProduct();
+
+    void delProduct(@Param("ids") List<String> ids);
+
+    int hasProdUctWithName(@Param("id") Long id, @Param("name") String name);
+
+    List<Map<String,Object>> getAllPullAuth();
 }

@@ -1,5 +1,6 @@
 package com.rrd.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.rrd.dao.CustomDao;
@@ -7,9 +8,11 @@ import com.rrd.model.Custom;
 import com.rrd.model.User;
 import com.rrd.pjo.ResCode;
 import com.rrd.pjo.Result;
+import com.rrd.plugin.JedisHelper;
 import com.rrd.service.CustomService;
 import com.rrd.utils.PublicUtil;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -21,6 +24,9 @@ import java.util.*;
  */
 @Service
 public class CustomServiceImpl implements CustomService {
+
+    @Autowired
+    private JedisHelper jedisHelper;
 
     @Resource
     private HttpServletRequest request;
@@ -106,20 +112,36 @@ public class CustomServiceImpl implements CustomService {
         }
         if (custom.getCustom_id() == null) {
             custom.setCrtuser(getUser().getUsername());
-            //添加学历信息
-            customDao.addEduc(custom);
+            if(!StringUtils.isEmpty(custom.getPurpose()) && Integer.valueOf(custom.getPurpose()) >= 4) {
+                //表示高等教育， 添加学历信息
+                //添加学历信息
+                customDao.addEduc(custom);
+            }
             //添加工作信息
             customDao.addWork(custom);
             //添加基本信息
             customDao.addCustom(custom);
+            //表示在校生，添加在校生信息
+            if("1".equals(custom.getPurpose())) {
+                customDao.addStudent(custom);
+            }
         } else {
             custom.setUpduser(getUser().getUsername());
             custom.setCrtuser(getUser().getUsername());
-            if (custom.getEduc_id() != null) {
+            if (custom.getPurpose() != null && Integer.valueOf(custom.getPurpose()) >= 4) {
                 //更新教育信息
-                customDao.updateEduc(custom);
-            } else {
-                customDao.addEduc(custom);
+                if(custom.getEduc_id() != null) {
+                    customDao.updateEduc(custom);
+                }else{
+                    customDao.addEduc(custom);
+                }
+            }else if("1".equals(custom.getPurpose())) {
+                if(custom.getStudent() != null) {
+                    //更新在校生信息
+                    customDao.updateStudent(custom);
+                }else{
+                    customDao.addStudent(custom);
+                }
             }
             if (custom.getWork_id() != null) {
                 //更新工作信息
@@ -129,12 +151,26 @@ public class CustomServiceImpl implements CustomService {
             }
             customDao.updateCustom(custom);
         }
+
+        //如果是线上客户，那么添加到redis中去
+        if("1".equals(custom.getRecsts())) {
+            //客户信息添加到redis中
+            //去除图片信息。以防信息过大，
+            custom.setPicture(null);
+            jedisHelper.setObjWithDay("custom_"+custom.getCustom_id(), custom, 3);
+        }
         return new Result();
     }
 
     @Override
     public Result delCustom(String customIds) {
-        return customDao.delCustom(PublicUtil.toListByIds(customIds));
+        customDao.delCustom(PublicUtil.toListByIds(customIds));
+        //请求redis中客户信息
+        for (String id : PublicUtil.toListByIds(customIds)) {
+            jedisHelper.deleteByKey("custom_"+id);
+        }
+        //请求redis中对应的用户
+        return new Result();
     }
 
     @Override
@@ -144,7 +180,7 @@ public class CustomServiceImpl implements CustomService {
             param.put("startdate", param.get("crtdatestr").split(",")[0]);
             param.put("enddate", param.get("crtdatestr").split(",")[1]);
         }
-        List<Custom> list = customDao.getCustomList(param);
+        List<Custom> list = customDao.getCustomList(param, getUser());
         return new PageInfo<>(list);
     }
 
@@ -161,9 +197,72 @@ public class CustomServiceImpl implements CustomService {
         return new PageInfo<>(list);
     }
 
+    @Override
+    public Result getAllCus(String key, String size) {
+        List<Custom> list = customDao.getAllCus(key, Integer.valueOf(size));
+        return new Result(list);
+    }
+
+    @Override
+    public Result getAllOnlineCus(String key, String size) {
+        List<Custom> list = customDao.getAllOnlineCus(key, Integer.valueOf(size));
+        return new Result(list);
+    }
+
+    @Override
+    public Result getAllCusWithKf(String key, String size) {
+        List<User> list = customDao.getAllCusWithKf(key, Integer.valueOf(size));
+        return new Result(list);
+    }
+
+    @Override
+    public PageInfo getWorkAuthList(PageInfo pageInfo, Custom custom) {
+        PageHelper.startPage(pageInfo);
+        List<Custom> list = customDao.getWorkAuthList(custom);
+        return new PageInfo<>(list);
+    }
+
+    @Override
+    public Result passWorkAuth(String custom_id) throws Exception {
+        customDao.passWorkAuth(custom_id);
+        Custom custom = customDao.getCustomById(custom_id);
+        jedisHelper.setWithSec(custom_id, JSON.toJSONString(custom));
+        return new Result();
+    }
+
+    @Override
+    public Result refuseWorkAuth(String custom_id) throws Exception {
+        customDao.refuseWorkAuth(custom_id);
+        Custom custom = customDao.getCustomById(custom_id);
+        jedisHelper.setWithSec(custom_id, JSON.toJSONString(custom));
+        return new Result();
+    }
+
+    @Override
+    public PageInfo getLinkAuthList(PageInfo pageInfo, Custom custom) {
+        PageHelper.startPage(pageInfo);
+        List<Custom> list = customDao.getLinkAuthList(custom);
+        return new PageInfo<>(list);
+    }
+
+    @Override
+    public Result passLinkAuth(String custom_id) throws Exception {
+        customDao.passLinkAuth(custom_id);
+        Custom custom = customDao.getCustomById(custom_id);
+        jedisHelper.setWithSec(custom_id, JSON.toJSONString(custom));
+        return new Result();
+    }
+
+    @Override
+    public Result refuseLinkAuth(String custom_id) throws Exception {
+        customDao.refuseLinkAuth(custom_id);
+        Custom custom = customDao.getCustomById(custom_id);
+        jedisHelper.setWithSec(custom_id, JSON.toJSONString(custom));
+        return new Result();
+    }
+
     /**
      * 获取登录的用户
-     *
      * @return
      */
     private User getUser() {

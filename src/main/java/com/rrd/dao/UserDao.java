@@ -20,4 +20,6 @@ public interface UserDao {
     void updateUser(User user);
 
     int getUserByLoginNmOrNo(User user);
+
+    void tzAuth(@Param("id") String id, @Param("tzAuth") String tzAuth);
 }

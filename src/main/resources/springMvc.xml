@@ -49,35 +49,6 @@
         </property>
     </bean>
 
-    <!--<bean id="properties2" class="org.springframework.beans.factory.config.PropertiesFactoryBean">-->
-        <!--<property name="locations">-->
-            <!--<list>-->
-                <!--<value>classpath:redis.properties</value>-->
-            <!--</list>-->
-        <!--</property>-->
-    <!--</bean>-->
-    <!--<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">-->
-        <!--<property name="properties" ref="properties2"></property>-->
-    <!--</bean>-->
-
-    <!--将session 放到redis 中去-->
-    <!--<bean id="redisHttpSessionConfiguration" class="org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration">-->
-        <!--<property name="maxInactiveIntervalInSeconds" value="1800" />-->
-    <!--</bean>-->
-
-    <!--<bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">-->
-        <!--<property name="maxWaitMillis" value="2800000"></property>-->
-        <!--<property name="maxTotal" value="100"></property>-->
-        <!--<property name="maxIdle" value="10"></property>-->
-    <!--</bean>-->
-
-    <!--&lt;!&ndash; 配置redis连接&ndash;&gt;-->
-    <!--<bean id="jedisConnectionFanctory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory" destroy-method="destroy">-->
-        <!--<property name="hostName" value="${redis.ip}"></property>-->
-        <!--<property name="port" value="${redis.port}"></property>-->
-        <!--<property name="password" value="${redis.requirepass}"></property>-->
-        <!--<property name="poolConfig" ref="poolConfig"></property>-->
-    <!--</bean>-->
 
     <!--配置文件上传相关-->
     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
@@ -88,24 +59,22 @@
 
     <!--处理静态资源-->
     <!--<mvc:resources mapping="/dist/**" location="/dist/" />-->
-    <!--<mvc:resources mapping="/static/**" location="/admin/static/" />-->
-    <!--<mvc:resources mapping="/document/**" location="/document/**" />-->
-    <!--<mvc:resources mapping="/email/**" location="/email/" />-->
+    <mvc:resources mapping="/static/**" location="/admin/static/" />
 
     <!-- 使用bean定义一个Interceptor，直接定义在mvc:interceptors根下面的Interceptor将拦截所有的请求 -->
     <!-- 定义在mvc:interceptor下面的表示是对特定的请求才进行拦截的 -->
     <mvc:interceptors >
         <!--过滤所有请求，处理跨域请求问题, 仅限本地测试使用-->
-        <mvc:interceptor>
-            <mvc:mapping path="/**"/>
-            <bean class="com.rrd.interceptor.CommonInterceptor"></bean>
-        </mvc:interceptor>
+        <!--<mvc:interceptor>-->
+            <!--<mvc:mapping path="/**"/>-->
+            <!--<bean class="com.rrd.interceptor.CommonInterceptor"></bean>-->
+        <!--</mvc:interceptor>-->
 
         <!--过滤ajax  .do请求，检查session是否过期-->
-        <!--<mvc:interceptor>-->
-         <!--<mvc:mapping path="/**"/>-->
-            <!--<bean class="com.rrd.filter.LoginFilter"></bean>-->
-        <!--</mvc:interceptor>-->
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.rrd.filter.LoginFilter"></bean>
+        </mvc:interceptor>
     </mvc:interceptors >
 
 </beans>

@@ -126,7 +126,9 @@ public class PublicUtil {
     public static List<Object> toSingList(List<Map<String, Object>> lists, String key){
         List<Object> list = new ArrayList();
         for(Map<String, Object> map : lists){
-            list.add(map.get(key));
+            if(map != null && map.get(key) != null) {
+                list.add(map.get(key));
+            }
         }
         return list;
     }
@@ -346,6 +348,11 @@ public class PublicUtil {
         sResult = sResult + original;
         return sResult;
 
+    }
+
+    public static String toDateStr(Date date, String pattern) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
+        return simpleDateFormat.format(date);
     }
 
     public static Date getDateWithPattern(String dateStr, String pattern) throws ParseException {

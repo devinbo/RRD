@@ -1,0 +1,19 @@
+body{margin: 0;padding: 0;font-family: "微软雅黑";font-size: 12px;color: #333333;}
+div.login{width: 100%;height: 750px; margin: 0;padding: 0;background: url(../img/login/login-bg.jpg) no-repeat;overflow: hidden;}
+
+div.content{width: 500px;height: 420px; margin: 120px auto;background: url(../img/login/login-ico.png) no-repeat left;}
+div.content_unit{width: 320px;height: 335px;margin: 0;float: right;border: 1px solid #F2F2F2;background: rgba(255,255,255,.3); box-sizing: border-box;}
+
+div.login_right_content_title{line-height: 30px;padding: 5px 20px;margin: 0 0 40px 0;background: #53dad0; color: #FFFFFF;font-weight: bold;font-size: 16px;}
+
+div.login_right_unit{width: 240px;height: 29px; margin: 20px auto;border: 1px solid #b5b5b5;padding: 0 5px;box-sizing: border-box;}
+div.login_right_unit input.username{width: 200px;height: 19px; display: block; margin: 5px 0;padding: 0 10px 0 20px;border: none;outline: none;background: url(../img/login/username.png) no-repeat left center;}
+div.login_right_unit input.password{width: 200px;height: 19px; display: block; margin: 5px 0;padding: 0 10px 0 20px;border: none;outline: none;background: url(../img/login/password.png) no-repeat left center;}
+
+div.login_right_remmber{width: 240px;height: 29px; margin: 20px auto;}
+div.login_right_remmber input{float: left;margin: 3px 10px 0 0;}
+div.login_btn{width: 240px;height: 36px;line-height: 36px; margin: 20px auto 10px auto;background: #f7b941;color: #FFFFFF;font-weight: bold;font-size: 14px;text-align: center;border-radius: 5px;cursor: pointer;}
+div.login_right_unit_text{width: 240px;margin: 0 auto; text-align: right;color: #238CAB;cursor: pointer;}
+div.login_right_unit_text:hover{color: #238CAB;text-decoration: underline;}
+
+div.footer{width: 100%;line-height: 20px;padding: 10px 0;background: #238CAB;text-align: center;color: #FFFFFF;font-size: 14px;}

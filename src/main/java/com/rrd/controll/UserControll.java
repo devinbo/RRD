@@ -2,17 +2,18 @@ package com.rrd.controll;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github.pagehelper.PageInfo;
-import com.rrd.model.Custom;
 import com.rrd.model.User;
 import com.rrd.pjo.Result;
 import com.rrd.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * Created by Administrator on 2017/10/12.
@@ -35,11 +36,11 @@ public class UserControll {
         return (User) request.getSession().getAttribute("user");
     }
 
-    @PostMapping("loginout")
+    @RequestMapping("loginout")
     public ModelAndView loginout(HttpServletRequest request) {
         request.getSession().setAttribute("user", null);
         ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("login");
+        modelAndView.setViewName("/admin/login");
         return modelAndView;
     }
 
@@ -61,5 +62,10 @@ public class UserControll {
     @PostMapping("andOrSaveUser")
     public Result andOrSaveUser(User user) {
         return userService.andOrSaveUser(user);
+    }
+
+    @PostMapping("tzAuth")
+    public Result tzAuth(@RequestParam Map<String, String> params) {
+        return userService.tzAuth(params);
     }
 }

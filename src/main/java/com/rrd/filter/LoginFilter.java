@@ -34,7 +34,7 @@ public class LoginFilter implements HandlerInterceptor {
                 ) {
             return true;
         } else {
-            if (req.getSession().getAttribute("userInfo") != null) {
+            if (req.getSession().getAttribute("user") != null) {
                 return true;
             } else {
                 req.getRequestDispatcher("/admin/login.jsp").forward(req, res);
